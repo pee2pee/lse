@@ -27,6 +27,7 @@ func main() {
 		},
 	}
 
+	cmd.Flags().BoolVarP(&lsf.G, "group", "g", false, "group directories before files")
 	cmd.Flags().BoolVarP(&lsf.A, "all", "a", false, "show all files including hidden files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
 

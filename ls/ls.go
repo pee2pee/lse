@@ -13,6 +13,7 @@ var dotFiles = []string{".", ".."}
 type Flags struct {
 	L bool // ls -l
 	A bool // ls -a
+	G bool // ls --group
 }
 
 type LS struct {
@@ -25,6 +26,9 @@ type LS struct {
 }
 
 func (l *LS) ListDir() error {
+	if l.G {
+		return l.groupdirfirst()
+	}
 	return l.nonRecursiveListing()
 }
 
@@ -59,4 +63,27 @@ func isHiddenPath(path string, forceHidden bool) bool {
 		return false
 	}
 	return path[0] == dotCharacter
+}
+
+func (l *LS) groupdirfirst() error {
+	var dirs []string
+	var filedirs []string
+	files, err := os.ReadDir(l.Dir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			dirs = append(dirs, file.Name())
+		} else {
+			filedirs = append(filedirs, file.Name())
+		}
+	}
+	for _, isDirs := range dirs {
+		fmt.Println(isDirs)
+	}
+	for _, isFiles := range filedirs {
+		fmt.Println(isFiles)
+	}
+	return nil
 }
