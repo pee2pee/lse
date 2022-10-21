@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/pee2pee/lse/ls"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 func main() {
