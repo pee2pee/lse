@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/pee2pee/lse/ls/color"
 )
 
 const dotCharacter = 46
@@ -13,11 +15,11 @@ const dotCharacter = 46
 var dotFiles = []string{".", ".."}
 
 type Flags struct {
-	L bool // ls -l
 	A bool // ls -a
-	G bool // ls --group
-	R bool // ls -R
 	D bool // ls -d
+	G bool // ls --group
+	L bool // ls -l
+	R bool // ls -R
 }
 
 type LS struct {
@@ -25,6 +27,7 @@ type LS struct {
 
 	Stderr io.Writer
 	StdOut io.Writer
+	Color  *color.Palette
 
 	Flags
 }
