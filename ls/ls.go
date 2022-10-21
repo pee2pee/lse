@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const dotCharacter = 46
@@ -15,6 +16,7 @@ type Flags struct {
 	L bool // ls -l
 	A bool // ls -a
 	R bool // ls -R
+	D bool // ls -d
 }
 
 type LS struct {
@@ -27,6 +29,10 @@ type LS struct {
 }
 
 func (l *LS) ListDir() error {
+	if l.D {
+		return l.showDirStructure()
+	}
+
 	if l.R {
 		return l.listDirRecursively()
 	}
@@ -61,7 +67,6 @@ func (l *LS) lsDotfiles() {
 
 // listDirRecursively list all subdirectories encountered from the folder
 func (l *LS) listDirRecursively() error {
-
 	err := filepath.Walk(l.Dir,
 
 		func(path string, info os.FileInfo, err error) error {
@@ -78,7 +83,6 @@ func (l *LS) listDirRecursively() error {
 		})
 
 	if err != nil {
-
 		return err
 	}
 	return nil
@@ -89,4 +93,19 @@ func isHiddenPath(path string, forceHidden bool) bool {
 		return false
 	}
 	return path[0] == dotCharacter
+}
+
+func (l *LS) showDirStructure() error {
+	file, err := os.Stat(l.Dir)
+	if err != nil {
+		return err
+	}
+
+	p := strings.TrimSuffix(l.Dir, "/")
+	if file.IsDir() {
+		p = p + "/"
+	}
+
+	fmt.Fprintln(l.StdOut, p)
+	return nil
 }
