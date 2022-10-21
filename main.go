@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/pee2pee/lse/ls"
 	"github.com/spf13/cobra"
+	"os"
+	_ "path/filepath"
 )
 
 func main() {
@@ -29,6 +29,7 @@ func main() {
 
 	cmd.Flags().BoolVarP(&lsf.A, "all", "a", false, "show all files including hidden files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
+	cmd.Flags().BoolVarP(&lsf.R, "recursive", "R", false, "show all subdirectories encountered")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
