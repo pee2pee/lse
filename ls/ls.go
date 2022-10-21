@@ -25,6 +25,10 @@ type LS struct {
 }
 
 func (l *LS) ListDir() error {
+	return l.nonRecursiveListing()
+}
+
+func (l *LS) nonRecursiveListing() error {
 	dirs, err := os.ReadDir(l.Dir)
 	if err != nil {
 		return err
