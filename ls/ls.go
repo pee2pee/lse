@@ -30,10 +30,12 @@ type LS struct {
 }
 
 func (l *LS) ListDir() error {
-	if l.G {
-		return l.groupdirfirst()
 	if l.D {
 		return l.showDirStructure()
+	}
+
+	if l.G {
+		return l.groupdirfirst()
 	}
 
 	if l.R {
@@ -98,7 +100,6 @@ func isHiddenPath(path string, forceHidden bool) bool {
 	return path[0] == dotCharacter
 }
 
-
 func (l *LS) groupdirfirst() error {
 	var dirs []string
 	var filedirs []string
@@ -119,6 +120,8 @@ func (l *LS) groupdirfirst() error {
 	for _, isFiles := range filedirs {
 		fmt.Fprintln(l.StdOut, isFiles)
 	}
+
+	return nil
 }
 
 func (l *LS) showDirStructure() error {
