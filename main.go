@@ -32,6 +32,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.G, "group", "g", false, "group directories before files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
 	cmd.Flags().BoolVarP(&lsf.R, "recursive", "R", false, "show all subdirectories encountered")
+	cmd.Flags().BoolVarP(&lsf.I, "indices", "i", false, "show the indices of the files in a directory")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
