@@ -80,10 +80,10 @@ func (l *LS) groupdirfirst() error {
 		}
 	}
 	for _, isDirs := range dirs {
-		fmt.Println(isDirs)
+		fmt.Fprintln(l.StdOut, isDirs)
 	}
 	for _, isFiles := range filedirs {
-		fmt.Println(isFiles)
+		fmt.Fprintln(l.StdOut, isFiles)
 	}
 	return nil
 }
