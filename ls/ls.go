@@ -15,6 +15,7 @@ type Flags struct {
 	L bool // ls -l
 	A bool // ls -a
 	R bool // ls -R
+	D bool // ls -d
 }
 
 type LS struct {
@@ -27,6 +28,10 @@ type LS struct {
 }
 
 func (l *LS) ListDir() error {
+	if l.D {
+		return l.ShowDirStructure()
+	}
+
 	if l.R {
 		return l.listDirRecursively()
 	}
@@ -61,7 +66,6 @@ func (l *LS) lsDotfiles() {
 
 // listDirRecursively list all subdirectories encountered from the folder
 func (l *LS) listDirRecursively() error {
-
 	err := filepath.Walk(l.Dir,
 
 		func(path string, info os.FileInfo, err error) error {
@@ -89,4 +93,19 @@ func isHiddenPath(path string, forceHidden bool) bool {
 		return false
 	}
 	return path[0] == dotCharacter
+}
+
+func (l *LS) ShowDirStructure() error {
+	file, err := os.Stat(l.Dir)
+	if err != nil {
+		return err
+	}
+
+	if file.IsDir() {
+		fmt.Fprintln(l.StdOut, file.Name()+"/")
+	} else {
+		fmt.Println(file.Name())
+	}
+
+	return nil
 }

@@ -29,6 +29,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.A, "all", "a", false, "show all files including hidden files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
 	cmd.Flags().BoolVarP(&lsf.R, "recursive", "R", false, "show all subdirectories encountered")
+	cmd.Flags().BoolVarP(&lsf.D, "directory", "d", false, "show directory structure")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
