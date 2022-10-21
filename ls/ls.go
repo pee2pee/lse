@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/pee2pee/lse/ls/color"
@@ -19,6 +20,7 @@ type Flags struct {
 	D bool // ls -d
 	G bool // ls --group
 	L bool // ls -l
+	Q bool // ls --quote
 	R bool // ls -R
 }
 
@@ -39,6 +41,9 @@ func (l *LS) ListDir() error {
 
 	if l.G {
 		return l.groupdirfirst()
+	}
+	if l.Q {
+		return l.qoutesEntryNames()
 	}
 
 	if l.R {
@@ -139,5 +144,15 @@ func (l *LS) showDirStructure() error {
 	}
 
 	fmt.Fprintln(l.StdOut, p)
+	return nil
+}
+func (l *LS) qoutesEntryNames() error {
+	files, err := os.ReadDir(l.Dir)
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		fmt.Println(strconv.Quote(file.Name()))
+	}
 	return nil
 }
