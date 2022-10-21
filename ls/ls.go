@@ -3,9 +3,15 @@ package ls
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
+
+	"github.com/profclems/glab/pkg/tableprinter"
 
 	"github.com/pee2pee/lse/ls/color"
 )
@@ -32,6 +38,11 @@ type LS struct {
 	Flags
 }
 
+type Dir struct {
+	Path string
+	Info fs.FileInfo
+}
+
 func (l *LS) ListDir() error {
 	if l.D {
 		return l.showDirStructure()
@@ -52,25 +63,35 @@ func (l *LS) nonRecursiveListing() error {
 	if err != nil {
 		return err
 	}
+	var d []Dir
 
 	// list dotfile if -a is specified
-	l.lsDotfiles()
+	if l.A {
+		for _, file := range dotFiles {
+			stat, err := os.Stat(file)
+			if err != nil {
+				return err
+			}
+			d = append(d, Dir{
+				Info: stat,
+				Path: file,
+			})
+		}
+	}
 
 	for _, entry := range dirs {
 		if !isHiddenPath(entry.Name(), l.A) {
-			fmt.Fprintln(l.StdOut, entry.Name())
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			d = append(d, Dir{
+				Info: info,
+				Path: filepath.Join(l.Dir, info.Name()),
+			})
 		}
 	}
-	return nil
-}
-
-// lsDotfiles list hidden files and paths if -a is specified
-func (l *LS) lsDotfiles() {
-	if l.A {
-		for _, file := range dotFiles {
-			fmt.Fprintln(l.StdOut, file)
-		}
-	}
+	return l.display(d)
 }
 
 // listDirRecursively list all subdirectories encountered from the folder
@@ -140,4 +161,61 @@ func (l *LS) showDirStructure() error {
 
 	fmt.Fprintln(l.StdOut, p)
 	return nil
+}
+
+func (l *LS) display(dirs []Dir) error {
+	totalBlkSize := 0
+	c := color.Color()
+
+	tb := tableprinter.NewTablePrinter()
+	tb.Wrap = true
+	tb.SetTerminalWidth(color.TerminalWidth(l.StdOut))
+
+	for i := range dirs {
+		dir := dirs[i]
+		name := dir.Info.Name()
+		if dir.Info.IsDir() {
+			name = c.Cyan(name)
+		}
+
+		if !l.L {
+			tb.AddCell(name)
+			continue
+		}
+
+		stat := dir.Info.Sys().(*syscall.Stat_t)
+
+		uid := stat.Uid
+		gid := stat.Gid
+
+		usr, err := user.LookupId(strconv.Itoa(int(uid)))
+		if err != nil {
+			return err
+		}
+
+		group, err := user.LookupGroupId(strconv.Itoa(int(gid)))
+		if err != nil {
+			return err
+		}
+
+		totalBlkSize += int(stat.Blocks)
+
+		timeStr := dir.Info.ModTime().UTC().Format("Jan 02 15:04")
+
+		tb.AddRow(dirs[i].Info.Mode(), stat.Nlink, usr.Username, group.Name, dirs[i].Info.Size(), timeStr, name)
+	}
+
+	if !l.L {
+		tb.EndRow()
+	}
+
+	if l.L {
+		_, err := fmt.Fprintln(l.StdOut, "total", totalBlkSize)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err := fmt.Fprint(l.StdOut, tb.String())
+	return err
 }
