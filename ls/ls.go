@@ -5,13 +5,8 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"os/user"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
-
-	"github.com/profclems/glab/pkg/tableprinter"
 
 	"github.com/pee2pee/lse/ls/color"
 )
@@ -161,61 +156,4 @@ func (l *LS) showDirStructure() error {
 
 	fmt.Fprintln(l.StdOut, p)
 	return nil
-}
-
-func (l *LS) display(dirs []Dir) error {
-	totalBlkSize := 0
-	c := color.Color()
-
-	tb := tableprinter.NewTablePrinter()
-	tb.Wrap = true
-	tb.SetTerminalWidth(color.TerminalWidth(l.StdOut))
-
-	for i := range dirs {
-		dir := dirs[i]
-		name := dir.Info.Name()
-		if dir.Info.IsDir() {
-			name = c.Cyan(name)
-		}
-
-		if !l.L {
-			tb.AddCell(name)
-			continue
-		}
-
-		stat := dir.Info.Sys().(*syscall.Stat_t)
-
-		uid := stat.Uid
-		gid := stat.Gid
-
-		usr, err := user.LookupId(strconv.Itoa(int(uid)))
-		if err != nil {
-			return err
-		}
-
-		group, err := user.LookupGroupId(strconv.Itoa(int(gid)))
-		if err != nil {
-			return err
-		}
-
-		totalBlkSize += int(stat.Blocks)
-
-		timeStr := dir.Info.ModTime().UTC().Format("Jan 02 15:04")
-
-		tb.AddRow(dirs[i].Info.Mode(), stat.Nlink, usr.Username, group.Name, dirs[i].Info.Size(), timeStr, name)
-	}
-
-	if !l.L {
-		tb.EndRow()
-	}
-
-	if l.L {
-		_, err := fmt.Fprintln(l.StdOut, "total", totalBlkSize)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err := fmt.Fprint(l.StdOut, tb.String())
-	return err
 }
