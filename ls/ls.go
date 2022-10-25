@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -46,9 +45,6 @@ func (l *LS) ListDir() error {
 
 	if l.G {
 		return l.groupdirfirst()
-	}
-	if l.Q {
-		return l.qoutesEntryNames()
 	}
 
 	if l.R {
@@ -159,15 +155,5 @@ func (l *LS) showDirStructure() error {
 	}
 
 	fmt.Fprintln(l.StdOut, p)
-	return nil
-}
-func (l *LS) qoutesEntryNames() error {
-	files, err := os.ReadDir(l.Dir)
-	if err != nil {
-		return err
-	}
-	for _, file := range files {
-		fmt.Fprintf(l.Stdout, "%q", file.Name())
-	}
 	return nil
 }

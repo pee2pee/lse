@@ -2,7 +2,6 @@ package ls
 
 import (
 	"fmt"
-
 	"github.com/pee2pee/lse/ls/color"
 	"github.com/profclems/glab/pkg/tableprinter"
 )
@@ -18,6 +17,11 @@ func (l *LS) display(dirs []Dir) (err error) {
 	for i := range dirs {
 		dir := dirs[i]
 		name := dir.Info.Name()
+
+		if l.Q {
+			name = fmt.Sprintf("%q", name)
+		}
+
 		if dir.Info.IsDir() {
 			name = c.Cyan(name)
 		}
