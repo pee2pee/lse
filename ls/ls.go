@@ -152,21 +152,3 @@ func (l *LS) showDirStructure() error {
 	fmt.Fprintln(l.StdOut, p)
 	return nil
 }
-
-func (l *LS) listFileIndex() error {
-	dirs, err := os.ReadDir(l.Dir)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range dirs {
-		fileInfo, err := os.Stat(file.Name())
-		if err != nil {
-			return err
-		}
-
-		fmt.Fprintln(l.StdOut, fileInfo)
-	}
-
-	return nil
-}
