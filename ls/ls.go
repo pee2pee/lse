@@ -47,16 +47,12 @@ func (l *LS) ListDir() error {
 	}
 
 	if l.R {
-		return l.listDirRecursively()
+		return l.listDirRecursively("")
 	}
 	return l.nonRecursiveListing()
 }
 
-func (l *LS) nonRecursiveListing() error {
-	dirs, err := os.ReadDir(l.Dir)
-	if err != nil {
-		return err
-	}
+func (l *LS) listDir(dirs []fs.DirEntry) error {
 	var d []Dir
 
 	// list dotfile if -a is specified
@@ -108,26 +104,43 @@ func (l *LS) nonRecursiveListing() error {
 	return l.display(d)
 }
 
-// listDirRecursively list all subdirectories encountered from the folder
-func (l *LS) listDirRecursively() error {
-	err := filepath.Walk(l.Dir,
-
-		func(path string, info os.FileInfo, err error) error {
-
-			if err != nil {
-				return err
-			}
-
-			if !isHiddenPath(path, l.A) {
-				fmt.Fprint(l.StdOut, path, "  ")
-				return err
-			}
-			return nil
-		})
-
+func (l *LS) nonRecursiveListing() error {
+	dirs, err := os.ReadDir(l.Dir)
 	if err != nil {
 		return err
 	}
+	return l.listDir(dirs)
+}
+
+// listDirRecursively list all subdirectories encountered from the folder
+func (l *LS) listDirRecursively(path string) error {
+	if path == "" {
+		path = l.Dir
+	}
+
+	dirs, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
+	err = l.listDir(dirs)
+	if err != nil {
+		return err
+	}
+
+	for _, dir := range dirs {
+		if dir.IsDir() && !isHiddenPath(dir.Name(), l.A) {
+			p := filepath.Join(path, dir.Name())
+
+			fmt.Fprintf(l.StdOut, "\n%s:\n", p)
+
+			err := l.listDirRecursively(p)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
