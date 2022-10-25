@@ -2,6 +2,7 @@ package ls
 
 import (
 	"fmt"
+
 	"github.com/pee2pee/lse/ls/color"
 	"github.com/profclems/glab/pkg/tableprinter"
 )
