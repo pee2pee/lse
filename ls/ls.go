@@ -25,6 +25,8 @@ type Flags struct {
 	R       bool // ls -R
 	T       bool // ls -t
 	Reverse bool // ls -r
+	K       bool // flag to sort files and directories by modification time and grouping them
+
 }
 
 type LS struct {
@@ -89,17 +91,22 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 	}
 
-	if (l.G && !l.T) || l.Reverse {
-		var dirs []Dir
-		var fileDirs []Dir
-		for _, file := range d {
-			if file.Info.IsDir() {
-				dirs = append(dirs, file)
-			} else {
-				fileDirs = append(fileDirs, file)
-			}
-		}
+	if l.K {
+		dirs, fileDirs := getFilesAndDirs(d)
 
+		sort.SliceStable(dirs, func(i, j int) bool {
+			return dirs[i].Info.ModTime().After(dirs[j].Info.ModTime())
+		})
+
+		sort.SliceStable(fileDirs, func(i, j int) bool {
+			return fileDirs[i].Info.ModTime().After(fileDirs[j].Info.ModTime())
+		})
+
+		d = append(dirs, fileDirs...)
+	}
+
+	if (l.G && !l.T) || l.Reverse {
+		dirs, fileDirs := getFilesAndDirs(d)
 		if !l.Reverse {
 			d = append(dirs, fileDirs...)
 		} else {
@@ -179,4 +186,15 @@ func (l *LS) showDirStructure() error {
 
 	fmt.Fprintln(l.StdOut, p)
 	return nil
+}
+
+func getFilesAndDirs(d []Dir) (dirs []Dir, fileDirs []Dir) {
+	for _, file := range d {
+		if file.Info.IsDir() {
+			dirs = append(dirs, file)
+		} else {
+			fileDirs = append(fileDirs, file)
+		}
+	}
+	return dirs, fileDirs
 }
