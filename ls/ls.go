@@ -2,13 +2,13 @@ package ls
 
 import (
 	"fmt"
+	"github.com/pee2pee/lse/ls/color"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/pee2pee/lse/ls/color"
 )
 
 const dotCharacter = 46
@@ -34,6 +34,11 @@ type LS struct {
 	Flags
 }
 
+type Dir struct {
+	Path string
+	Info fs.FileInfo
+}
+
 func (l *LS) ListDir() error {
 	if l.D {
 		return l.showDirStructure()
@@ -57,25 +62,35 @@ func (l *LS) nonRecursiveListing() error {
 	if err != nil {
 		return err
 	}
+	var d []Dir
 
 	// list dotfile if -a is specified
-	l.lsDotfiles()
+	if l.A {
+		for _, file := range dotFiles {
+			stat, err := os.Stat(file)
+			if err != nil {
+				return err
+			}
+			d = append(d, Dir{
+				Info: stat,
+				Path: file,
+			})
+		}
+	}
 
 	for _, entry := range dirs {
 		if !isHiddenPath(entry.Name(), l.A) {
-			fmt.Fprintln(l.StdOut, entry.Name())
+			info, err := entry.Info()
+			if err != nil {
+				return err
+			}
+			d = append(d, Dir{
+				Info: info,
+				Path: filepath.Join(l.Dir, info.Name()),
+			})
 		}
 	}
-	return nil
-}
-
-// lsDotfiles list hidden files and paths if -a is specified
-func (l *LS) lsDotfiles() {
-	if l.A {
-		for _, file := range dotFiles {
-			fmt.Fprintln(l.StdOut, file)
-		}
-	}
+	return l.display(d)
 }
 
 // listDirRecursively list all subdirectories encountered from the folder
