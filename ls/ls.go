@@ -19,6 +19,7 @@ type Flags struct {
 	D bool // ls -d
 	G bool // ls --group
 	L bool // ls -l
+	Q bool // ls --quote
 	R bool // ls -R
 }
 

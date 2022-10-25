@@ -31,6 +31,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.D, "directory", "d", false, "show directory structure")
 	cmd.Flags().BoolVarP(&lsf.G, "group", "g", false, "group directories before files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
+	cmd.Flags().BoolVarP(&lsf.Q, "quote", "q", false, "enclose entry names in double quotes")
 	cmd.Flags().BoolVarP(&lsf.R, "recursive", "R", false, "show all subdirectories encountered")
 
 	if err := cmd.Execute(); err != nil {
