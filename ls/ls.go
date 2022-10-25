@@ -214,7 +214,6 @@ func (l *LS) sortFilesByTime() error {
 		dateFormat := formatDate(year, int(month), day)
 
 		displayFormat := fmt.Sprintf("%s Date: %s Time: %s", fileName, dateFormat, timeFormat)
-
 		fmt.Fprintln(l.StdOut, displayFormat)
 	}
 
