@@ -164,7 +164,7 @@ func (l *LS) showDirStructure() error {
 func (l *LS) qoutesEntryNames() error {
 	files, err := os.ReadDir(l.Dir)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	for _, file := range files {
 		fmt.Fprintf(l.Stdout, "%q", file.Name())
