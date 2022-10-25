@@ -2,12 +2,14 @@ package ls
 
 import (
 	"fmt"
-	"github.com/pee2pee/lse/ls/color"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"github.com/pee2pee/lse/ls/color"
 )
 
 const dotCharacter = 46
@@ -21,6 +23,7 @@ type Flags struct {
 	L bool // ls -l
 	Q bool // ls --quote
 	R bool // ls -R
+	T bool // ls -t
 }
 
 type LS struct {
@@ -74,6 +77,8 @@ func (l *LS) nonRecursiveListing() error {
 		}
 	}
 
+	var modTimes []string
+
 	for _, entry := range dirs {
 		if !isHiddenPath(entry.Name(), l.A) {
 			info, err := entry.Info()
@@ -84,7 +89,24 @@ func (l *LS) nonRecursiveListing() error {
 				Info: info,
 				Path: filepath.Join(l.Dir, info.Name()),
 			})
+			modTimes = append(modTimes, info.ModTime().String())
 		}
+	}
+
+	if l.T {
+		var sortedFiles []Dir
+		sort.Sort(sort.Reverse(sort.StringSlice(modTimes)))
+
+		for _, v := range modTimes {
+			for _, dir := range d {
+				if dir.Info.ModTime().String() == v {
+					sortedFiles = append(sortedFiles, dir)
+				}
+			}
+		}
+
+		d = sortedFiles
+
 	}
 	return l.display(d)
 }
@@ -155,5 +177,23 @@ func (l *LS) showDirStructure() error {
 	}
 
 	fmt.Fprintln(l.StdOut, p)
+	return nil
+}
+
+func (l *LS) listFileIndex() error {
+	dirs, err := os.ReadDir(l.Dir)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range dirs {
+		fileInfo, err := os.Stat(file.Name())
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintln(l.StdOut, fileInfo)
+	}
+
 	return nil
 }
