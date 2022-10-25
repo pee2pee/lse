@@ -73,8 +73,6 @@ func (l *LS) nonRecursiveListing() error {
 		}
 	}
 
-	var modTimes []string
-
 	for _, entry := range dirs {
 		if !isHiddenPath(entry.Name(), l.A) {
 			info, err := entry.Info()
@@ -85,24 +83,13 @@ func (l *LS) nonRecursiveListing() error {
 				Info: info,
 				Path: filepath.Join(l.Dir, info.Name()),
 			})
-			modTimes = append(modTimes, info.ModTime().String())
 		}
 	}
 
 	if l.T {
-		var sortedFiles []Dir
-		sort.Sort(sort.Reverse(sort.StringSlice(modTimes)))
-
-		for _, v := range modTimes {
-			for _, dir := range d {
-				if dir.Info.ModTime().String() == v {
-					sortedFiles = append(sortedFiles, dir)
-				}
-			}
-		}
-
-		d = sortedFiles
-
+		sort.SliceStable(d, func(i, j int) bool {
+			return d[i].Info.ModTime().After(d[j].Info.ModTime())
+		})
 	}
 
 	if l.G && !l.T {
