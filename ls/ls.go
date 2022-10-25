@@ -167,7 +167,7 @@ func (l *LS) qoutesEntryNames() error {
 		panic(err)
 	}
 	for _, file := range files {
-		fmt.Println(strconv.Quote(file.Name()))
+		fmt.Fprintf(l.Stdout, "%q", file.Name())
 	}
 	return nil
 }
