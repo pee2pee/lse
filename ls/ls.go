@@ -17,13 +17,14 @@ const dotCharacter = 46
 var dotFiles = []string{".", ".."}
 
 type Flags struct {
-	A bool // ls -a
-	D bool // ls -d
-	G bool // ls --group
-	L bool // ls -l
-	Q bool // ls --quote
-	R bool // ls -R
-	T bool // ls -t
+	A       bool // ls -a
+	D       bool // ls -d
+	G       bool // ls --group
+	L       bool // ls -l
+	Q       bool // ls --quote
+	R       bool // ls -R
+	T       bool // ls -t
+	Reverse bool // ls -r
 }
 
 type LS struct {
@@ -88,7 +89,7 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 	}
 
-	if l.G && !l.T {
+	if (l.G && !l.T) || l.Reverse {
 		var dirs []Dir
 		var fileDirs []Dir
 		for _, file := range d {
@@ -98,7 +99,21 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 				fileDirs = append(fileDirs, file)
 			}
 		}
-		d = append(dirs, fileDirs...)
+
+		if !l.Reverse {
+			d = append(dirs, fileDirs...)
+		} else {
+			sort.Slice(dirs, func(i, j int) bool {
+				return dirs[i].Info.Name() > dirs[j].Info.Name()
+			})
+
+			sort.Slice(fileDirs, func(i, j int) bool {
+				return fileDirs[i].Info.Name() > fileDirs[j].Info.Name()
+			})
+
+			d = append(fileDirs, dirs...)
+		}
+
 	}
 
 	return l.display(d)
