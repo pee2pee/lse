@@ -2,18 +2,12 @@ package ls
 
 import (
 	"fmt"
+	"github.com/pee2pee/lse/ls/color"
 	"io"
 	"io/fs"
 	"os"
-	"os/user"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"syscall"
-
-	"github.com/profclems/glab/pkg/tableprinter"
-
-	"github.com/pee2pee/lse/ls/color"
 )
 
 const dotCharacter = 46
@@ -22,6 +16,7 @@ var dotFiles = []string{".", ".."}
 
 type Flags struct {
 	A bool // ls -a
+	C bool // ls -c
 	D bool // ls -d
 	G bool // ls --group
 	L bool // ls -l
@@ -29,8 +24,7 @@ type Flags struct {
 }
 
 type LS struct {
-	Dir string
-
+	Dir    string
 	Stderr io.Writer
 	StdOut io.Writer
 	Color  *color.Palette
@@ -44,6 +38,10 @@ type Dir struct {
 }
 
 func (l *LS) ListDir() error {
+	if l.C {
+		return l.clearScreen()
+	}
+
 	if l.D {
 		return l.showDirStructure()
 	}
@@ -163,59 +161,7 @@ func (l *LS) showDirStructure() error {
 	return nil
 }
 
-func (l *LS) display(dirs []Dir) error {
-	totalBlkSize := 0
-	c := color.Color()
-
-	tb := tableprinter.NewTablePrinter()
-	tb.Wrap = true
-	tb.SetTerminalWidth(color.TerminalWidth(l.StdOut))
-
-	for i := range dirs {
-		dir := dirs[i]
-		name := dir.Info.Name()
-		if dir.Info.IsDir() {
-			name = c.Cyan(name)
-		}
-
-		if !l.L {
-			tb.AddCell(name)
-			continue
-		}
-
-		stat := dir.Info.Sys().(*syscall.Stat_t)
-
-		uid := stat.Uid
-		gid := stat.Gid
-
-		usr, err := user.LookupId(strconv.Itoa(int(uid)))
-		if err != nil {
-			return err
-		}
-
-		group, err := user.LookupGroupId(strconv.Itoa(int(gid)))
-		if err != nil {
-			return err
-		}
-
-		totalBlkSize += int(stat.Blocks)
-
-		timeStr := dir.Info.ModTime().UTC().Format("Jan 02 15:04")
-
-		tb.AddRow(dirs[i].Info.Mode(), stat.Nlink, usr.Username, group.Name, dirs[i].Info.Size(), timeStr, name)
-	}
-
-	if !l.L {
-		tb.EndRow()
-	}
-
-	if l.L {
-		_, err := fmt.Fprintln(l.StdOut, "total", totalBlkSize)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err := fmt.Fprint(l.StdOut, tb.String())
-	return err
+func (l *LS) clearScreen() error {
+	fmt.Fprint(l.StdOut, "\033[H\033[2J")
+	return nil
 }
