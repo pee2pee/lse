@@ -46,10 +46,6 @@ func (l *LS) ListDir() error {
 		return l.showDirStructure()
 	}
 
-	if l.G {
-		return l.groupdirfirst()
-	}
-
 	if l.R {
 		return l.listDirRecursively()
 	}
@@ -108,6 +104,20 @@ func (l *LS) nonRecursiveListing() error {
 		d = sortedFiles
 
 	}
+
+	if l.G && !l.T {
+		var dirs []Dir
+		var fileDirs []Dir
+		for _, file := range d {
+			if file.Info.IsDir() {
+				dirs = append(dirs, file)
+			} else {
+				fileDirs = append(fileDirs, file)
+			}
+		}
+		d = append(dirs, fileDirs...)
+	}
+
 	return l.display(d)
 }
 
@@ -139,30 +149,6 @@ func isHiddenPath(path string, forceHidden bool) bool {
 		return false
 	}
 	return path[0] == dotCharacter
-}
-
-func (l *LS) groupdirfirst() error {
-	var dirs []string
-	var filedirs []string
-	files, err := os.ReadDir(l.Dir)
-	if err != nil {
-		return err
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			dirs = append(dirs, file.Name())
-		} else {
-			filedirs = append(filedirs, file.Name())
-		}
-	}
-	for _, isDirs := range dirs {
-		fmt.Fprintln(l.StdOut, isDirs)
-	}
-	for _, isFiles := range filedirs {
-		fmt.Fprintln(l.StdOut, isFiles)
-	}
-
-	return nil
 }
 
 func (l *LS) showDirStructure() error {
