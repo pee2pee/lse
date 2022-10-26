@@ -14,18 +14,16 @@ import (
 
 const dotCharacter = 46
 
-var dotFiles = []string{".", ".."}
-
 type Flags struct {
-	A       bool // ls -a
-	D       bool // ls -d
-	G       bool // ls --group
-	L       bool // ls -l
-	Q       bool // ls --quote
-	R       bool // ls -R
-	T       bool // ls -t
-	Reverse bool // ls -r
-
+	A         bool // ls -a
+	D         bool // ls -d
+	G         bool // ls --group
+	L         bool // ls -l
+	Q         bool // ls --quote
+	R         bool // ls -R
+	T         bool // ls -t
+	Reverse   bool // ls -r
+	AlmostAll bool // ls -A
 }
 
 type LS struct {
@@ -73,6 +71,7 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 
 	// list dotfile if -a is specified
 	if l.A {
+		var dotFiles = []string{".", ".."}
 		for _, file := range dotFiles {
 			stat, err := os.Stat(file)
 			if err != nil {
@@ -86,7 +85,7 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 	}
 
 	for _, entry := range dirs {
-		if !isHiddenPath(entry.Name(), l.A) {
+		if !isHiddenPath(entry.Name(), l.A || l.AlmostAll) {
 			info, err := entry.Info()
 			if err != nil {
 				return err
@@ -150,7 +149,7 @@ func (l *LS) listDirRecursively(path string) error {
 	}
 
 	for _, dir := range dirs {
-		if dir.IsDir() && !isHiddenPath(dir.Name(), l.A) {
+		if dir.IsDir() && !isHiddenPath(dir.Name(), l.A || l.AlmostAll) {
 			p := filepath.Join(path, dir.Name())
 
 			fmt.Fprintf(l.StdOut, "\n%s:\n", p)
@@ -169,6 +168,7 @@ func isHiddenPath(path string, forceHidden bool) bool {
 	if forceHidden {
 		return false
 	}
+
 	return path[0] == dotCharacter
 }
 
