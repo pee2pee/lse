@@ -24,6 +24,7 @@ type Flags struct {
 	T         bool // ls -t
 	Reverse   bool // ls -r
 	AlmostAll bool // ls -A
+	One       bool // ls -1
 }
 
 type LS struct {

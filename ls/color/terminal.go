@@ -27,8 +27,11 @@ func isStdoutTerminal() bool {
 }
 
 // IsTerminal reports whether the file descriptor is connected to a terminal
-var IsTerminal = func(f *os.File) bool {
-	return isatty.IsTerminal(f.Fd()) || IsCygwinTerminal(f)
+var IsTerminal = func(w interface{}) bool {
+	if f, isFile := w.(*os.File); isFile {
+		return isatty.IsTerminal(f.Fd()) || IsCygwinTerminal(f)
+	}
+	return false
 }
 
 func IsCygwinTerminal(f *os.File) bool {
