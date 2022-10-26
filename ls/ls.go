@@ -25,6 +25,7 @@ type Flags struct {
 	R       bool // ls -R
 	T       bool // ls -t
 	Reverse bool // ls -r
+
 }
 
 type LS struct {
@@ -42,6 +43,20 @@ type Dir struct {
 	Info fs.FileInfo
 }
 
+type Dirs []Dir
+
+func (d Dirs) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+func (d Dirs) Len() int {
+	return len(d)
+}
+
+func (d Dirs) Less(i, j int) bool {
+	return true
+}
+
 func (l *LS) ListDir() error {
 	if l.D {
 		return l.showDirStructure()
@@ -54,7 +69,7 @@ func (l *LS) ListDir() error {
 }
 
 func (l *LS) listDir(dirs []fs.DirEntry) error {
-	var d []Dir
+	var d Dirs
 
 	// list dotfile if -a is specified
 	if l.A {
@@ -89,31 +104,22 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 	}
 
-	if (l.G && !l.T) || l.Reverse {
-		var dirs []Dir
-		var fileDirs []Dir
-		for _, file := range d {
-			if file.Info.IsDir() {
-				dirs = append(dirs, file)
-			} else {
-				fileDirs = append(fileDirs, file)
-			}
-		}
-
-		if !l.Reverse {
-			d = append(dirs, fileDirs...)
-		} else {
-			sort.Slice(dirs, func(i, j int) bool {
-				return dirs[i].Info.Name() > dirs[j].Info.Name()
+	if l.G {
+		dirs, fileDirs := getFilesAndDirs(d)
+		if l.T {
+			sort.SliceStable(dirs, func(i, j int) bool {
+				return dirs[i].Info.ModTime().After(dirs[j].Info.ModTime())
 			})
 
-			sort.Slice(fileDirs, func(i, j int) bool {
-				return fileDirs[i].Info.Name() > fileDirs[j].Info.Name()
+			sort.SliceStable(fileDirs, func(i, j int) bool {
+				return fileDirs[i].Info.ModTime().After(fileDirs[j].Info.ModTime())
 			})
-
-			d = append(fileDirs, dirs...)
 		}
+		d = append(dirs, fileDirs...)
+	}
 
+	if l.Reverse {
+		sort.Sort(sort.Reverse(d))
 	}
 
 	return l.display(d)
@@ -179,4 +185,15 @@ func (l *LS) showDirStructure() error {
 
 	fmt.Fprintln(l.StdOut, p)
 	return nil
+}
+
+func getFilesAndDirs(d []Dir) (dirs []Dir, fileDirs []Dir) {
+	for _, file := range d {
+		if file.Info.IsDir() {
+			dirs = append(dirs, file)
+		} else {
+			fileDirs = append(fileDirs, file)
+		}
+	}
+	return dirs, fileDirs
 }
