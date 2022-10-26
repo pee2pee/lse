@@ -37,6 +37,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.T, "sort-by-time", "t", false, "show the files in a directory sorted by the time of modification")
 	cmd.Flags().BoolVarP(&lsf.Reverse, "reverse", "r", false, "reverse the order of the sort")
 	cmd.Flags().BoolVarP(&lsf.AlmostAll, "almost-all", "A", false, " do not list implied . and ..")
+	cmd.Flags().BoolVarP(&lsf.X, "sort-by-extension", "X", false, "sort files by extension")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
