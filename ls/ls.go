@@ -25,7 +25,6 @@ type Flags struct {
 	R       bool // ls -R
 	T       bool // ls -t
 	Reverse bool // ls -r
-	K       bool // flag to sort files and directories by modification time and grouping them
 
 }
 
@@ -44,6 +43,20 @@ type Dir struct {
 	Info fs.FileInfo
 }
 
+type Dirs []Dir
+
+func (d Dirs) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+func (d Dirs) Len() int {
+	return len(d)
+}
+
+func (d Dirs) Less(i, j int) bool {
+	return true
+}
+
 func (l *LS) ListDir() error {
 	if l.D {
 		return l.showDirStructure()
@@ -56,7 +69,7 @@ func (l *LS) ListDir() error {
 }
 
 func (l *LS) listDir(dirs []fs.DirEntry) error {
-	var d []Dir
+	var d Dirs
 
 	// list dotfile if -a is specified
 	if l.A {
@@ -91,36 +104,22 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 	}
 
-	if l.K {
+	if l.G {
 		dirs, fileDirs := getFilesAndDirs(d)
+		if l.T {
+			sort.SliceStable(dirs, func(i, j int) bool {
+				return dirs[i].Info.ModTime().After(dirs[j].Info.ModTime())
+			})
 
-		sort.SliceStable(dirs, func(i, j int) bool {
-			return dirs[i].Info.ModTime().After(dirs[j].Info.ModTime())
-		})
-
-		sort.SliceStable(fileDirs, func(i, j int) bool {
-			return fileDirs[i].Info.ModTime().After(fileDirs[j].Info.ModTime())
-		})
-
+			sort.SliceStable(fileDirs, func(i, j int) bool {
+				return fileDirs[i].Info.ModTime().After(fileDirs[j].Info.ModTime())
+			})
+		}
 		d = append(dirs, fileDirs...)
 	}
 
-	if (l.G && !l.T) || l.Reverse {
-		dirs, fileDirs := getFilesAndDirs(d)
-		if !l.Reverse {
-			d = append(dirs, fileDirs...)
-		} else {
-			sort.Slice(dirs, func(i, j int) bool {
-				return dirs[i].Info.Name() > dirs[j].Info.Name()
-			})
-
-			sort.Slice(fileDirs, func(i, j int) bool {
-				return fileDirs[i].Info.Name() > fileDirs[j].Info.Name()
-			})
-
-			d = append(fileDirs, dirs...)
-		}
-
+	if l.Reverse {
+		sort.Sort(sort.Reverse(d))
 	}
 
 	return l.display(d)

@@ -34,8 +34,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.Q, "quote", "q", false, "enclose entry names in double quotes")
 	cmd.Flags().BoolVarP(&lsf.R, "recursive", "R", false, "show all subdirectories encountered")
 	cmd.Flags().BoolVarP(&lsf.T, "sort-by-time", "t", false, "show the files in a directory sorted by the time of modification")
-	cmd.Flags().BoolVarP(&lsf.Reverse, "reverse", "r", false, "group files before directories")
-	cmd.Flags().BoolVarP(&lsf.K, "sort-by-time-&-group", "K", false, "sort files and directories by the time of modification and separate directories from files")
+	cmd.Flags().BoolVarP(&lsf.Reverse, "reverse", "r", false, "reverse the order of the sort")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
