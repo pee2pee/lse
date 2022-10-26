@@ -17,6 +17,8 @@ var (
 type Palette struct {
 	// Magenta outputs ANSI color if stdout is a tty
 	Magenta func(string) string
+	// BoldCyan outputs ANSI color if stdout is a tty
+	BoldCyan func(string) string
 	// Cyan outputs ANSI color if stdout is a tty
 	Cyan func(string) string
 	// Red outputs ANSI color if stdout is a tty
@@ -35,14 +37,15 @@ type Palette struct {
 
 func Color() *Palette {
 	return &Palette{
-		Magenta: makeColorFunc("magenta"),
-		Cyan:    makeColorFunc("cyan"),
-		Red:     makeColorFunc("red"),
-		Yellow:  makeColorFunc("yellow"),
-		Blue:    makeColorFunc("blue"),
-		Green:   makeColorFunc("green"),
-		Gray:    makeColorFunc("black+h"),
-		Bold:    makeColorFunc("default+b"),
+		Magenta:  makeColorFunc("magenta"),
+		BoldCyan: makeColorFunc("cyan+b"),
+		Cyan:     makeColorFunc("cyan"),
+		Red:      makeColorFunc("red"),
+		Yellow:   makeColorFunc("yellow"),
+		Blue:     makeColorFunc("blue"),
+		Green:    makeColorFunc("green"),
+		Gray:     makeColorFunc("black+h"),
+		Bold:     makeColorFunc("default+b"),
 	}
 }
 
