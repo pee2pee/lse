@@ -25,6 +25,7 @@ type Flags struct {
 	Reverse   bool // ls -r
 	AlmostAll bool // ls -A
 	One       bool // ls -1
+	X         bool // ls -X
 }
 
 type LS struct {
@@ -120,6 +121,14 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 
 	if l.Reverse {
 		sort.Sort(sort.Reverse(d))
+	}
+
+	if l.X {
+		dirs, fileDirs := getFilesAndDirs(d)
+		sort.SliceStable(fileDirs, func(i, j int) bool {
+			return filepath.Ext(fileDirs[i].Info.Name()) < filepath.Ext(fileDirs[j].Info.Name())
+		})
+		d = append(dirs, fileDirs...)
 	}
 
 	return l.display(d)
