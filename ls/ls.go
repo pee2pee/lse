@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/pee2pee/lse/ls/color"
@@ -26,6 +28,7 @@ type Flags struct {
 	AlmostAll bool // ls -A
 	One       bool // ls -1
 	X         bool // ls -X
+	H         bool //ls -h
 }
 
 type LS struct {
@@ -206,4 +209,29 @@ func getFilesAndDirs(d []Dir) (dirs []Dir, fileDirs []Dir) {
 		}
 	}
 	return dirs, fileDirs
+}
+
+func (l *LS) minifySize(size int64) (sizeString string) {
+	if !l.H {
+		return strconv.Itoa(int(size))
+	}
+	units := []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+	if size == 0 {
+		sizeString = fmt.Sprintf("%d%s", size, units[size])
+		return
+	}
+
+	for i := len(units) - 1; i >= 0; i-- {
+		divisor := math.Pow(10, float64(3*i))
+		result := float64(size) / divisor
+		if result > 1.0 {
+			if int64(result) == size {
+				sizeString = fmt.Sprintf("%d%s", size, units[i])
+			} else {
+				sizeString = fmt.Sprintf("%.1f%s", result, units[i])
+			}
+			break
+		}
+	}
+	return
 }

@@ -27,6 +27,7 @@ func main() {
 			return lsf.ListDir()
 		},
 	}
+	cmd.PersistentFlags().BoolP("help", "", false, "help for this command")
 	cmd.Flags().BoolVarP(&lsf.One, "force-entry-per-line", "1", false, "(The numeric digit “one”.) Force output to be one entry per line. This is the default when output is not to a terminal. (-l) output, and don't materialize dataless directories when listing them.")
 	cmd.Flags().BoolVarP(&lsf.A, "all", "a", false, "show all files including hidden files")
 	cmd.Flags().BoolVarP(&lsf.D, "directory", "d", false, "show directory structure")
@@ -38,6 +39,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.Reverse, "reverse", "r", false, "reverse the order of the sort")
 	cmd.Flags().BoolVarP(&lsf.AlmostAll, "almost-all", "A", false, " do not list implied . and ..")
 	cmd.Flags().BoolVarP(&lsf.X, "sort-by-extension", "X", false, "sort files by extension")
+	cmd.Flags().BoolVarP(&lsf.H, "human-readable", "h", false, "print the sizes of files and directories in standardized formats like 1KB, 2GB, etc.")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
