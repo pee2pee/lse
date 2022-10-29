@@ -25,7 +25,7 @@ func (l *LS) _display(table *tableprinter.TablePrinter, name string, dir *Dir) (
 
 	timeStr := dir.Info.ModTime().UTC().Format("Jan 02 15:04")
 
-	table.AddRow(dir.Info.Mode(), stat.Nlink, usr.Username, group.Name, dir.Info.Size(), timeStr, name)
+	table.AddRow(dir.Info.Mode(), stat.Nlink, usr.Username, group.Name, l.minifySize(dir.Info.Size()), timeStr, name)
 
 	return int(stat.Blocks), nil
 }
