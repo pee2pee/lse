@@ -2,7 +2,9 @@ package ls
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 
 	"github.com/pee2pee/lse/ls/color"
 	"github.com/profclems/glab/pkg/tableprinter"
@@ -19,7 +21,20 @@ func (l *LS) display(dirs []Dir) (err error) {
 	for i := range dirs {
 		dir := dirs[i]
 		name := dir.Info.Name()
-
+		if l.F {
+			if dir.Info.IsDir() {
+				name = fmt.Sprintf(name + "/")
+			} else if dir.Info.Mode()&os.ModeSymlink == os.ModeSymlink {
+				originalPath, _ := filepath.EvalSymlinks(dir.Path)
+				name = fmt.Sprintf(name + "@" + " -> " + originalPath)
+			} else if dir.Info.Mode().Type() == fs.ModeSocket {
+				name = fmt.Sprintf(name + "=")
+			} else if isExecAll(os.ModePerm) {
+				name = fmt.Sprintf(name + "*")
+			} else {
+				dir.Info.Name()
+			}
+		}
 		if l.Q {
 			name = fmt.Sprintf("%q", name)
 		}
