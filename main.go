@@ -31,7 +31,7 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.One, "force-entry-per-line", "1", false, "(The numeric digit “one”.) Force output to be one entry per line. This is the default when output is not to a terminal. (-l) output, and don't materialize dataless directories when listing them.")
 	cmd.Flags().BoolVarP(&lsf.A, "all", "a", false, "show all files including hidden files")
 	cmd.Flags().BoolVarP(&lsf.D, "directory", "d", false, "show directory structure")
-	cmd.Flags().BoolVarP(&lsf.F, "classify", "c", false, "classify directory files")
+	cmd.Flags().BoolVarP(&lsf.F, "classify", "F", false, "classify directory files")
 	cmd.Flags().BoolVarP(&lsf.G, "group", "g", false, "group directories before files")
 	cmd.Flags().BoolVarP(&lsf.L, "tabular", "l", false, "show detailed directory structure in tabular form")
 	cmd.Flags().BoolVarP(&lsf.Q, "quote", "q", false, "enclose entry names in double quotes")

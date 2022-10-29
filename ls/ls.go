@@ -21,7 +21,7 @@ const threshold = 1.0
 type Flags struct {
 	A         bool // ls -a
 	D         bool // ls -d
-	F         bool // ls -f
+	F         bool // ls -F
 	G         bool // ls --group
 	L         bool // ls -l
 	Q         bool // ls --quote
