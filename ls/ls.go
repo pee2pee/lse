@@ -292,5 +292,5 @@ func (l *LS) evaluateFileAndDirSize(dir Dir) string {
 }
 
 func isExecAll(mode os.FileMode) bool {
-	return mode&0111 == 0111
+	return mode&0100 != 0
 }

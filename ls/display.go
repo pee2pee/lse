@@ -29,7 +29,7 @@ func (l *LS) display(dirs []Dir) (err error) {
 				name = fmt.Sprintf(name + "@" + " -> " + originalPath)
 			} else if dir.Info.Mode().Type() == fs.ModeSocket {
 				name = fmt.Sprintf(name + "=")
-			} else if isExecAll(os.ModePerm) {
+			} else if isExecAll(dir.Info.Mode()) {
 				name = fmt.Sprintf(name + "*")
 			} else {
 				dir.Info.Name()
