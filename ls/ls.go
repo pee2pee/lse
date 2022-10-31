@@ -29,6 +29,7 @@ type Flags struct {
 	One       bool // ls -1
 	X         bool // ls -X
 	H         bool //ls -h
+	DirSize   bool // new
 }
 
 type LS struct {
@@ -134,6 +135,17 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		d = append(dirs, fileDirs...)
 	}
 
+	if l.DirSize {
+		// dirs, _ := getFilesAndDirs(d)
+		// dirSizes := make(map[string]int64)
+		// for _, dir := range dirs {
+		// 	dirSize := calculateDirSize(dir.Info.Name(), "")
+		// 	// dirSizes[dir.Info.Name()] = dirSize
+		// }
+
+		// fmt.Fprintln(l.StdOut, dirSizes)
+	}
+
 	return l.display(d)
 }
 
@@ -200,7 +212,7 @@ func (l *LS) showDirStructure() error {
 	return nil
 }
 
-func getFilesAndDirs(d []Dir) (dirs []Dir, fileDirs []Dir) {
+func getFilesAndDirs(d []Dir) (dirs, fileDirs []Dir) {
 	for _, file := range d {
 		if file.Info.IsDir() {
 			dirs = append(dirs, file)
@@ -221,8 +233,10 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 		return
 	}
 
+	const expValue int = 3
+
 	for i := len(units) - 1; i >= 0; i-- {
-		divisor := math.Pow(10, float64(3*i))
+		divisor := math.Pow(10, float64(expValue*i))
 		result := float64(size) / divisor
 		if result > 1.0 {
 			if int64(result) == size {
@@ -233,5 +247,42 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 			break
 		}
 	}
+	return
+}
+
+func calculateDirSize(dirPath, currentDir string) error {
+	// cMap := make(map[string][]fs.DirEntry)
+	// dirs, err := os.ReadDir(dirPath)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// for _, dir := range dirs {
+	// 	if dir.IsDir() {
+	// 		p := filepath.Join(currentDir, dir.Name())
+	// 		cMap[p] = calculateDirSize(p)
+	// 	}
+	// // }
+
+	return nil
+}
+
+func calculateSubDirSize(dirs []fs.DirEntry) error {
+	var d []Dir
+	for _, entry := range dirs {
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		d = append(d, Dir{
+			Info: info,
+			// Path: filepath.Join(l.Dir, info.Name()),
+			Path: "",
+		})
+	}
+	return nil
+}
+
+func calculateSubFileSize(childFile, parent string) (size int64) {
 	return
 }
