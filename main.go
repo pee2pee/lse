@@ -40,7 +40,6 @@ func main() {
 	cmd.Flags().BoolVarP(&lsf.AlmostAll, "almost-all", "A", false, " do not list implied . and ..")
 	cmd.Flags().BoolVarP(&lsf.X, "sort-by-extension", "X", false, "sort files by extension")
 	cmd.Flags().BoolVarP(&lsf.H, "human-readable", "h", false, "print the sizes of files and directories in standardized formats like 1KB, 2GB, etc.")
-	cmd.Flags().BoolVarP(&lsf.DirSize, "dir-size", "P", false, "print the sizes of files and directories in standardized formats like 1KB, 2GB, etc.")
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

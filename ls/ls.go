@@ -16,8 +16,6 @@ import (
 
 const dotCharacter = 46
 
-var dirSizeMap map[string]int64
-
 type Flags struct {
 	A         bool // ls -a
 	D         bool // ls -d
@@ -31,7 +29,6 @@ type Flags struct {
 	One       bool // ls -1
 	X         bool // ls -X
 	H         bool //ls -h
-	DirSize   bool // new
 }
 
 type LS struct {
@@ -137,10 +134,6 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		d = append(dirs, fileDirs...)
 	}
 
-	if l.DirSize {
-		l.fileAndDirectorySize(d)
-	}
-
 	return l.display(d)
 }
 
@@ -229,11 +222,12 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 	}
 
 	const expValue int = 3
+	const threshold float64 = 1.0
 
 	for i := len(units) - 1; i >= 0; i-- {
 		divisor := math.Pow(10, float64(expValue*i))
 		result := float64(size) / divisor
-		if result > 1.0 {
+		if result >= threshold {
 			if int64(result) == size {
 				sizeString = fmt.Sprintf("%d%s", size, units[i])
 			} else {
@@ -245,95 +239,55 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 	return
 }
 
-func (l *LS) calculateDirSize(dirPath, root string) (size int64) {
-	dirs, files := getFilesAndDirsForSizeCal(dirPath, root)
-	root, rootErr := os.Getwd()
-	if rootErr != nil {
-		return -1
-	}
-	for _, d := range dirs {
-		fmt.Println("Main dirs loop, value of root", root)
-		size += l.calculateDirSize(d.Path, root)
+func (l *LS) calculateDirSize(dir Dir) (size int64) {
+	dirContent, filesContents := getFilesAndDirsForSize(dir)
+
+	for _, subDir := range dirContent {
+		size += l.calculateDirSize(subDir)
 	}
 
-	for _, file := range files {
+	for _, file := range filesContents {
 		size += file.Info.Size()
 	}
 
-	fmt.Println(dirPath, l.minifySize(size))
 	return
 }
 
-func getFilesAndDirsForSizeCal(dirPath, root string) (dirs, files []Dir) {
-	var validPath, currentDirPath string
-	var cdpErr error
-	var dir Dir
-	if root == "" {
-		currentDirPath, cdpErr = os.Getwd()
-		if cdpErr != nil {
-			return nil, nil
-		}
-		validPath = fmt.Sprintf("%s", currentDirPath)
-	} else {
-		validPath = fmt.Sprintf("%s/%s", root, dirPath)
+func getFilesAndDirsForSize(dirP Dir) (dirs, files []Dir) {
+	dirContent, dirReadErr := os.ReadDir(dirP.Path)
 
-	}
-
-	changeDirErr := os.Chdir(validPath)
-
-	if changeDirErr != nil {
+	if dirReadErr != nil {
 		return nil, nil
 	}
-	d, readDirErr := os.ReadDir(".")
 
-	if readDirErr != nil {
-		return nil, nil
-	}
-	for _, file := range d {
+	for _, dir := range dirContent {
+		dirInfo, dirInfoErr := dir.Info()
 
-		fileInfo, fileInfoErr := file.Info()
-
-		if fileInfoErr != nil {
+		if dirInfoErr != nil {
 			return nil, nil
 		}
 
-		currentDirNPath, cdpNErr := os.Getwd()
-		if cdpNErr != nil {
-			return nil, nil
+		dirD := Dir{
+			Info: dirInfo,
+			Path: filepath.Join(dirP.Path, dir.Name()),
 		}
 
-		if file.IsDir() {
-			if cdpNErr != nil {
-				return nil, nil
-			}
-
-			dir = Dir{
-				Info: fileInfo,
-				Path: filepath.Join(file.Name()),
-			}
-			dirs = append(dirs, dir)
+		if dir.IsDir() {
+			dirs = append(dirs, dirD)
 		} else {
-			dir = Dir{
-				Info: fileInfo,
-				Path: filepath.Join(currentDirNPath, file.Name()),
-			}
-			files = append(files, dir)
+			files = append(files, dirD)
 		}
+
 	}
 	return
 }
 
-func (l *LS) fileAndDirectorySize(d []Dir) {
+func (l *LS) evaluateFileAndDirSize(dir Dir) string {
 	var size int64
-	dirs, _ := getFilesAndDirs(d)
-
-	for _, dir := range dirs {
-		size = l.calculateDirSize(dir.Path, "")
-		fmt.Println(dir.Info.Name(), l.minifySize(size))
-		dirSizeMap[dir.Info.Name()] = size
+	if dir.Info.IsDir() {
+		size = l.calculateDirSize(dir)
+	} else {
+		size = dir.Info.Size()
 	}
-
-	for k, v := range dirSizeMap {
-		fmt.Println(k, "====>", v)
-	}
+	return l.minifySize(size)
 }
