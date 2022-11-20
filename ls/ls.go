@@ -15,6 +15,8 @@ import (
 )
 
 const dotCharacter = 46
+const expValue = 3
+const threshold = 1.0
 
 type Flags struct {
 	A         bool // ls -a
@@ -220,9 +222,6 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 		sizeString = fmt.Sprintf("%d%s", size, units[size])
 		return
 	}
-
-	const expValue int = 3
-	const threshold float64 = 1.0
 
 	for i := len(units) - 1; i >= 0; i-- {
 		divisor := math.Pow(10, float64(expValue*i))
