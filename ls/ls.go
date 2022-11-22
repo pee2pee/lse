@@ -21,6 +21,7 @@ const threshold = 1.0
 type Flags struct {
 	A         bool // ls -a
 	D         bool // ls -d
+	F         bool // ls -F
 	G         bool // ls --group
 	L         bool // ls -l
 	Q         bool // ls --quote
@@ -135,7 +136,6 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 		d = append(dirs, fileDirs...)
 	}
-
 	return l.display(d)
 }
 
@@ -289,4 +289,8 @@ func (l *LS) evaluateFileAndDirSize(dir Dir) string {
 		size = dir.Info.Size()
 	}
 	return l.minifySize(size)
+}
+
+func isExecAll(mode os.FileMode) bool {
+	return mode&0100 != 0
 }
