@@ -15,10 +15,13 @@ import (
 )
 
 const dotCharacter = 46
+const expValue = 3
+const threshold = 1.0
 
 type Flags struct {
 	A         bool // ls -a
 	D         bool // ls -d
+	F         bool // ls -F
 	G         bool // ls --group
 	L         bool // ls -l
 	Q         bool // ls --quote
@@ -133,7 +136,6 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		})
 		d = append(dirs, fileDirs...)
 	}
-
 	return l.display(d)
 }
 
@@ -200,7 +202,7 @@ func (l *LS) showDirStructure() error {
 	return nil
 }
 
-func getFilesAndDirs(d []Dir) (dirs []Dir, fileDirs []Dir) {
+func getFilesAndDirs(d []Dir) (dirs, fileDirs []Dir) {
 	for _, file := range d {
 		if file.Info.IsDir() {
 			dirs = append(dirs, file)
@@ -222,9 +224,9 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 	}
 
 	for i := len(units) - 1; i >= 0; i-- {
-		divisor := math.Pow(10, float64(3*i))
+		divisor := math.Pow(10, float64(expValue*i))
 		result := float64(size) / divisor
-		if result > 1.0 {
+		if result >= threshold {
 			if int64(result) == size {
 				sizeString = fmt.Sprintf("%d%s", size, units[i])
 			} else {
@@ -234,4 +236,61 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 		}
 	}
 	return
+}
+
+func (l *LS) calculateDirSize(dir Dir) (size int64) {
+	dirContent, filesContents := getFilesAndDirsForSize(dir)
+
+	for _, subDir := range dirContent {
+		size += l.calculateDirSize(subDir)
+	}
+
+	for _, file := range filesContents {
+		size += file.Info.Size()
+	}
+
+	return
+}
+
+func getFilesAndDirsForSize(dirP Dir) (dirs, files []Dir) {
+	dirContent, dirReadErr := os.ReadDir(dirP.Path)
+
+	if dirReadErr != nil {
+		return nil, nil
+	}
+
+	for _, dir := range dirContent {
+		dirInfo, dirInfoErr := dir.Info()
+
+		if dirInfoErr != nil {
+			return nil, nil
+		}
+
+		dirD := Dir{
+			Info: dirInfo,
+			Path: filepath.Join(dirP.Path, dir.Name()),
+		}
+
+		if dir.IsDir() {
+			dirs = append(dirs, dirD)
+		} else {
+			files = append(files, dirD)
+		}
+
+	}
+	return
+}
+
+func (l *LS) evaluateFileAndDirSize(dir Dir) string {
+	var size int64
+	if dir.Info.IsDir() {
+		size = l.calculateDirSize(dir)
+	} else {
+		size = dir.Info.Size()
+	}
+	return l.minifySize(size)
+}
+
+func isExecAll(mode os.FileMode) bool {
+	return mode&0100 != 0
 }
