@@ -2,8 +2,6 @@
 
 package utils
 
-import "github.com/braswelljr/rmx/internal/constants"
-
 // IsHidden returns true if the file/directory is hidden
 //
 //	@param path - the path to the file/directory
