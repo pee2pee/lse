@@ -12,11 +12,8 @@ import (
 	"strings"
 
 	"github.com/pee2pee/lse/ls/color"
+	"github.com/pee2pee/lse/utils"
 )
-
-const dotCharacter = 46
-const expValue = 3
-const threshold = 1.0
 
 type Flags struct {
 	A         bool // ls -a
@@ -51,10 +48,18 @@ type Dir struct {
 
 type Dirs []Dir
 
+// Swap - swaps two directories
+//
+//	@param i - first directory
+//	@param j - second directory
+//	@return void
 func (d Dirs) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
+// Len - returns the number of items in a directory.
+//
+//	@return {int} len
 func (d Dirs) Len() int {
 	return len(d)
 }
@@ -63,6 +68,9 @@ func (d Dirs) Less(i, j int) bool {
 	return true
 }
 
+// ListDir - list the contents of a directory
+//
+//	@return error
 func (l *LS) ListDir() error {
 	if l.D {
 		return l.showDirStructure()
@@ -74,12 +82,18 @@ func (l *LS) ListDir() error {
 	return l.nonRecursiveListing()
 }
 
+// listDir - list the contents of a directory
+//
+//	@param dirs - list the directories
+//	@return error
 func (l *LS) listDir(dirs []fs.DirEntry) error {
 	var d Dirs
 
 	// list dotfile if -a is specified
 	if l.A {
 		var dotFiles = []string{".", ".."}
+
+		// append the dotfiles to the list of directories
 		for _, file := range dotFiles {
 			stat, err := os.Stat(file)
 			if err != nil {
@@ -92,12 +106,15 @@ func (l *LS) listDir(dirs []fs.DirEntry) error {
 		}
 	}
 
+	// check for !hidden files/directories
 	for _, entry := range dirs {
-		if !isHiddenPath(entry.Name(), l.A || l.AlmostAll) {
+		if !utils.IsHidden(entry.Name(), l.A || l.AlmostAll) {
 			info, err := entry.Info()
 			if err != nil {
 				return err
 			}
+
+			// append them to the directory
 			d = append(d, Dir{
 				Info: info,
 				Path: filepath.Join(l.Dir, info.Name()),
@@ -164,7 +181,7 @@ func (l *LS) listDirRecursively(path string) error {
 	}
 
 	for _, dir := range dirs {
-		if dir.IsDir() && !isHiddenPath(dir.Name(), l.A || l.AlmostAll) {
+		if dir.IsDir() && !utils.IsHidden(dir.Name(), l.A || l.AlmostAll) {
 			p := filepath.Join(path, dir.Name())
 
 			fmt.Fprintf(l.StdOut, "\n%s:\n", p)
@@ -177,14 +194,6 @@ func (l *LS) listDirRecursively(path string) error {
 	}
 
 	return nil
-}
-
-func isHiddenPath(path string, forceHidden bool) bool {
-	if forceHidden {
-		return false
-	}
-
-	return path[0] == dotCharacter
 }
 
 func (l *LS) showDirStructure() error {
@@ -224,9 +233,11 @@ func (l *LS) minifySize(size int64) (sizeString string) {
 	}
 
 	for i := len(units) - 1; i >= 0; i-- {
-		divisor := math.Pow(10, float64(expValue*i))
+		divisor := math.Pow(10, float64(utils.ExpValue*i))
 		result := float64(size) / divisor
-		if result >= threshold {
+
+		// check if result is greater/equal to the threshold and set the file size
+		if result >= utils.Threshold {
 			if int64(result) == size {
 				sizeString = fmt.Sprintf("%d%s", size, units[i])
 			} else {
